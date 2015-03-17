@@ -1,3 +1,7 @@
+#Samuel Spry
+#Hw 03
+#Doesn't work, should work if the parser works.  But the parser doesn't generate a valid tree
+
 #todo
 #  write the parser
 #    Create tree
@@ -72,7 +76,7 @@ class Lex
       when "-"
         return "MIN", "-"
       else
-        print("Syntax errer ")
+        print("lexical error ")
         print(check)
         print(" is not a valid token")
         return "INVALID", check
@@ -81,78 +85,91 @@ class Lex
 end
 
 class Parse
+  def initialize
+    @root = Tree.new("prog")
+  end
   def gen_tree(lex)
     look_ahead = lex.next
-    @root = Tree.new("prog")
     while look_ahead != nil
       current = look_ahead
       look_ahead = lex.next
-      expr(current, look_ahead)
+      expr(current, look_ahead,@root)
     end
   end
-  def expr(token, look_ahead)
-    if term(token, look_ahead)
-
+  def expr(token, look_ahead,node)
+    node.data = Tree.new("expr")
+    if look_ahead[0] != "MIN" or look_ahead[0] != "ADD"
+      node.center = term(token, look_ahead,node.center)
+      return node.center
     else
-
+      node.left = expr(token, look_ahead,node.left)
+      node.center = add_op(token, look_ahead, node.center)
+      node.right = term(token, look_ahead, node.right)
     end
   end
-  def term(token, look_ahead)
-    if factor(token, look_ahead)
-
-    else #if term
-
-    end
-  end
-  def factor(token, look_ahead)
-    if number(token, look_ahead)
+  def term(token, look_ahead,node)
+    node.data = Tree.new("term")
+    if look_ahead[0] != "MUL" or look_ahead[0] != "DIV"
+      node.center = factor(token, look_ahead,node.center)
+      return node.center
     else
+      node.left = term(token, look_ahead,node.left)
+      node.center = mul_op(token, look_ahead, node.center)
+      node.right = factor(token, look_ahead, node.center)
     end
   end
-  def add_op(token, look_ahead)
+  def factor(token, look_ahead,node)
+    node.data = Tree.new("factor")
+    if token[0] == "NUMBER"
+      node.center = number(token, look_ahead,node.center)
+    else
+      node.right = Tree.new("(")
+      node.center = expr(token,look_ahead, node.center)
+      node.left = Tree.new(")")
+    end
+  end
+  def add_op(token, look_ahead,node)
     if token == "MIN"
+      node.data = "MIN"
+      node.center = new Tree("-")
     elsif token == "ADD"
+      node.data = "ADD"
+      node.center = new Tree("+")
     else
       puts "Semantic Error"
       return nil
     end
   end
-  def mul_op(token, look_ahead)
+  def mul_op(token, look_ahead,node)
     if token =="MUL"
+      node.data = "MUL"
+      node.center = new Tree("*")
     elsif token == "DIV"
+      node.data = "DIV"
+      node.center = new Tree("/")
     else
       puts "Syntactic Error"
       return nil
     end
   end
-  def number(token, look_ahead)
+  def number(token, look_ahead,node)
     if token == "NUMBER"
+      node.data = "NUMBER"
+      node.center = new Tree(token[1])
     elsif
       puts "Syntactic Error"
       return nil
     end
   end
-  def eval_tree
-    ev = Eval.new
-    Eval.eval_tree(@root)
-  end
-end
 
-class Tree
-  attr_accessor :left
-  attr_accessor :center
-  attr_accessor :right
-  attr_accessor :data
-  def initialize(v=nil)
-    @left = nil
-    @center = nil
-    @right = nil
-    @data = v
+  def evtree
+    eval_tree(@root)
   end
-end
 
-class Eval
   def eval_tree(node)
+    if node == nil
+      return
+    end
     if node.left == nil && node.right == nil
       return eval_tree(node.center)
     elsif node.left.data == "(" && node.right.data == ")"
@@ -181,9 +198,23 @@ class Eval
   end
 end
 
+class Tree
+  attr_accessor :left
+  attr_accessor :center
+  attr_accessor :right
+  attr_accessor :data
+  def initialize(v=nil)
+    @left = nil
+    @center = nil
+    @right = nil
+    @data = v
+  end
+end
+
 analyze = Lex.new
 parser = Parse.new
 parse = true
+#while loop doesn't do anything, yet
 while(parse)
   parse = false
   print("Enter an expression to parse: ")
@@ -193,5 +224,5 @@ while(parse)
     puts analyze.next
   end
   parser.gen_tree(analyze)
-  parser.eval_tree
+  parser.evtree
 end
