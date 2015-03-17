@@ -1,10 +1,12 @@
 #todo
-#  Initialize the string tokens to contain only non-whitespace tokens
-#  test next function to make sure it returns the character and token
-#  tex lex_anly to make sure it performs as expected
-#  write the grammar for the parser
+#  write the number identifier in the lexical analyzer
+#    Using regex
 #  write the parser
+#    Create tree
+#    Test Tree
 #  write the eval function
+#    easier if top down, and left most
+#    Probably should be recursive
 
 
 # .chr() transfer int value to character value  42.chr() == *
